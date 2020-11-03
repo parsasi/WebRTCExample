@@ -18,7 +18,12 @@ class VideoRTC{
 
     async makeOffer(){
         this.peerConnection.addStream(this.localStream)
-        const offer = await this.peerConnection.createOffer();
+        const offer = await this.peerConnection.createOffer({
+            mandatory: {
+                OfferToReceiveAudio: true,
+                OfferToReceiveVideo : true
+            }
+        });
         await this.peerConnection.setLocalDescription(offer)
         return offer
     }
@@ -26,12 +31,15 @@ class VideoRTC{
     async recieveOffer(offer){
         const remoteOffer = new RTCSessionDescription(offer)
         this.peerConnection.setRemoteDescription(remoteOffer)
-        this.peerConnection.addStream(this.localStream)
+        // this.peerConnection.addStream(this.localStream)
         return await this.answerOffer()
     }
 
     async answerOffer(){
-        const answer = await this.peerConnection.createAnswer();
+        const answer = await this.peerConnection.createAnswer({ mandatory: {
+            OfferToReceiveAudio: true,
+            OfferToReceiveVideo : true
+        }});
         await this.peerConnection.setLocalDescription(answer)
         return answer
     }
@@ -50,8 +58,7 @@ class VideoRTC{
         this.peerConnection.addEventListener('connectionstatechange', async event => {
             if (this.peerConnection.connectionState === 'connected') {
                 this.localStream.getTracks().forEach(track => {
-                    // this.peerConnection.addTrack(track, this.localStream);
-                    this.setRemoteMedia(this.remoteStream)
+                    this.peerConnection.addTrack(track, this.localStream);
                 })
             }
         })
@@ -61,6 +68,8 @@ class VideoRTC{
         this.peerConnection.addEventListener('track' , async event => {
             console.log('RTC: A track is recieved from the other party')
             this.remoteStream.addTrack(event.track , this.remoteStream)
+            this.setRemoteMedia(this.remoteStream)
+
         })
     }
 
@@ -75,6 +84,7 @@ class VideoRTC{
 }
 
 const socket = io.connect('localhost:8081');
+console.log(socket)
 
 const localVideo = document.querySelector('#local')
 const remoteVideo = document.querySelector('#remote')
@@ -86,7 +96,7 @@ const startCall = document.querySelector('#startCall')
 let localStream
 
 
-socket.on('connect', function(data) {
+socket.on('connect', function() {
 
     async function getUserMedia(){
         return await navigator.mediaDevices.getUserMedia({video : true})
