@@ -14,7 +14,19 @@ const startCall = document.querySelector('#startCall')
 let localStream
 
 
+
 socket.on('connect', function(data) {
+
+
+    let rtc
+
+    startVideo.addEventListener('click' ,  setLocalStream)
+    startCall.addEventListener('click' , makeOffer)
+
+    async function initiateRTC(){
+        rtc = new VideoRTC({getUserMedia , setRemoteMedia , onIceCandidate})
+        await rtc.configStreams()
+    }
 
     async function getUserMedia(){
         return await navigator.mediaDevices.getUserMedia({video : true})
@@ -27,20 +39,17 @@ socket.on('connect', function(data) {
     function onIceCandidate(candidate){
         socket.emit('new-ice-candidate',  candidate);
     }
-
-    const rtc = new VideoRTC({getUserMedia , setRemoteMedia , onIceCandidate})
-    rtc.configStreams()
-    startVideo.addEventListener('click' ,  setLocalStream)
-    startCall.addEventListener('click' , makeOffer)
-
-
+    
+    
     async function makeOffer(){
+        await initiateRTC()
         console.log('Caller creates an offer')
         const offer = await rtc.makeOffer()
         socket.emit('call' , offer)
     }
 
     socket.on('offer' , async offer => {
+        await initiateRTC()
         console.log('Callee recieves the offer')
         const answer = await rtc.recieveOffer(offer)
         socket.emit('answer' , answer)
