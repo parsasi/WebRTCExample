@@ -2,7 +2,7 @@
 import VideoRTC from './rtc.js'
 
 
-const socket = io.connect('localhost:8081');
+const socket = io.connect('192.168.1.176:8081');
 
 const localVideo = document.querySelector('#local')
 const remoteVideo = document.querySelector('#remote')

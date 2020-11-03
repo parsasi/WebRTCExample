@@ -26,7 +26,7 @@ export default class VideoRTC{
     async recieveOffer(offer){
         const remoteOffer = new RTCSessionDescription(offer)
         this.peerConnection.setRemoteDescription(remoteOffer)
-        // this.peerConnection.addStream(this.localStream)
+        this.peerConnection.addStream(this.localStream)
         return await this.answerOffer()
     }
 
@@ -43,7 +43,11 @@ export default class VideoRTC{
     }
 
     async remoteIceRecieved(iceCandidate){
-        await this.peerConnection.addIceCandidate(iceCandidate);
+        try{
+            await this.peerConnection.addIceCandidate(iceCandidate);
+        }catch(err){
+            console.error(err)
+        }
     }
 
     async stateChangeEventListener(){
@@ -51,21 +55,19 @@ export default class VideoRTC{
             if (this.peerConnection.connectionState === 'connected') {
                 this.localStream.getTracks().forEach(track => {
                     console.log('sending tracks to remote')
-                    // this.peerConnection.addTrack(track, this.localStream);
+                    this.peerConnection.addTrack(track, this.localStream);
 
                     //THIS IS WHERE I MESSED UP 
                     //this.remoteStream is set in track event listener and assigned to the video element here WRONG!!!
-                    this.setRemoteMedia(this.remoteStream)
                 })
             }
         })
     }
-
     async trackEventListener(){
         this.peerConnection.addEventListener('track' , async event => {
             console.log('remote track recieved')
-            // console.log('RTC: A track is recieved from the other party')
             this.remoteStream.addTrack(event.track , this.remoteStream)
+            this.setRemoteMedia(this.remoteStream)
         })
     }
 
