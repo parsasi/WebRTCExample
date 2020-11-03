@@ -1,4 +1,4 @@
-class VideoRTC{
+export default class VideoRTC{
     peerConnection;
     remoteStream;
     constructor( options , configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}){
